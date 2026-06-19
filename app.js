@@ -215,7 +215,8 @@ function simulateRun() {
     addLog(`点击登录按钮：${config.login.loginButtonTarget || "未配置"}`);
   }
   config.steps.forEach((step, index) => {
-    addLog(`第 ${index + 1} 步：${step.action} -> ${step.targetType}:${step.target || "未填写目标"}`);
+    const actionName = step.action === "buttonClick" ? "只点按钮" : step.action;
+    addLog(`第 ${index + 1} 步：${actionName} -> ${step.targetType}:${step.target || "未填写目标"}`);
   });
   config.partTemplate.parts.forEach((part, index) => {
     addLog(`零件 ${index + 1}：${part.code || "未填编码"}，数量 ${part.quantity || 0}，行目标 ${part.rowTarget || config.partTemplate.rowClickRule}`);
@@ -238,6 +239,19 @@ function bindActions() {
     state.steps.push({
       name: `自定义步骤 ${state.steps.length + 1}`,
       action: "click",
+      targetType: "text",
+      target: "",
+      value: "",
+      waitMs: Number($("#defaultWait").value || 800)
+    });
+    renderSteps();
+    updatePreview();
+  });
+
+  $("#addButtonStep").addEventListener("click", () => {
+    state.steps.push({
+      name: `点击按钮 ${state.steps.length + 1}`,
+      action: "buttonClick",
       targetType: "text",
       target: "",
       value: "",

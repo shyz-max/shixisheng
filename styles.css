@@ -184,6 +184,13 @@ select:focus {
   gap: 14px;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .section-head h2 {
   margin: 4px 0 0;
   font-size: 22px;

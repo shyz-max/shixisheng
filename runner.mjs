@@ -54,7 +54,7 @@ async function runStep(page, step, defaultWait) {
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
       throw new Error(`坐标格式错误：${step.target}`);
     }
-    if (step.action === "click") await page.mouse.click(x, y);
+    if (step.action === "click" || step.action === "buttonClick") await page.mouse.click(x, y);
     return;
   }
 
@@ -66,7 +66,7 @@ async function runStep(page, step, defaultWait) {
   const locator = locatorFor(page, step);
   if (!locator) return;
 
-  if (step.action === "click") await locator.click();
+  if (step.action === "click" || step.action === "buttonClick") await locator.click();
   if (step.action === "type") await locator.fill(step.value || "");
   if (step.action === "select") await locator.selectOption({ label: step.value || "" });
   if (step.action === "hotkey") await page.keyboard.press(step.value || step.target || "Enter");
