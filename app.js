@@ -224,6 +224,13 @@ function simulateRun() {
   if (config.settings.requireConfirm) {
     addLog("提交前需要二次确认。");
   }
+  if (config.mesUrl) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    addLog("即将跳转到 MES 目标页面。");
+    setTimeout(() => {
+      window.location.href = config.mesUrl;
+    }, 500);
+  }
 }
 
 function bindActions() {
