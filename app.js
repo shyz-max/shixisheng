@@ -227,9 +227,12 @@ function simulateRun() {
   }
   if (config.mesUrl) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    addLog("即将跳转到 MES 目标页面。");
+    addLog("即将在新窗口打开 MES 目标页面。");
     setTimeout(() => {
-      window.location.href = config.mesUrl;
+      const opened = window.open(config.mesUrl, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        addLog("浏览器拦截了新窗口，请允许弹窗后重试。");
+      }
     }, 500);
   }
 }
