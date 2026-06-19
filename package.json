@@ -1,0 +1,12 @@
+{
+  "name": "mes-outbound-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run-flow": "playwright test runner.mjs --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest"
+  }
+}
