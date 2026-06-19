@@ -26,9 +26,11 @@ const state = {
     name: "BOM 生产领料",
     rowClickRule: "byPartCode",
     finalButton: "",
+    selectPartButtonTarget: "",
     partSearchTarget: "",
     quantityTarget: "",
-    addPartButtonTarget: "",
+    partConfirmButtonTarget: "",
+    drawingColumnName: "零件图号",
     parts: [
       {
         code: "P001",
@@ -82,9 +84,11 @@ function getConfig() {
       name: $("#templateName").value.trim(),
       rowClickRule: $("#rowClickRule").value,
       finalButton: $("#finalButton").value.trim(),
+      selectPartButtonTarget: $("#selectPartButtonTarget").value.trim(),
       partSearchTarget: $("#partSearchTarget").value.trim(),
       quantityTarget: $("#quantityTarget").value.trim(),
-      addPartButtonTarget: $("#addPartButtonTarget").value.trim(),
+      partConfirmButtonTarget: $("#partConfirmButtonTarget").value.trim(),
+      drawingColumnName: $("#drawingColumnName").value.trim(),
       parts: state.partTemplate.parts
     },
     settings: {
@@ -109,9 +113,11 @@ function syncTopFields(config = state) {
   $("#templateName").value = config.partTemplate?.name || "";
   $("#rowClickRule").value = config.partTemplate?.rowClickRule || "byPartCode";
   $("#finalButton").value = config.partTemplate?.finalButton || "";
+  $("#selectPartButtonTarget").value = config.partTemplate?.selectPartButtonTarget || config.partTemplate?.addPartButtonTarget || "";
   $("#partSearchTarget").value = config.partTemplate?.partSearchTarget || "";
   $("#quantityTarget").value = config.partTemplate?.quantityTarget || "";
-  $("#addPartButtonTarget").value = config.partTemplate?.addPartButtonTarget || "";
+  $("#partConfirmButtonTarget").value = config.partTemplate?.partConfirmButtonTarget || config.partTemplate?.addPartButtonTarget || "";
+  $("#drawingColumnName").value = config.partTemplate?.drawingColumnName || "零件图号";
   $("#browserType").value = config.settings?.browserType || "chrome";
   $("#defaultWait").value = config.settings?.defaultWait ?? 800;
   $("#failureMode").value = config.settings?.failureMode || "pause";
@@ -233,6 +239,66 @@ function parseBomText(text) {
     .filter((part) => part.code);
 }
 
+function findHeaderIndex(headers, preferredName) {
+  const normalized = headers.map((header) => String(header || "").trim().toLowerCase());
+  const candidates = [
+    preferredName,
+    "零件图号",
+    "图号",
+    "物料图号",
+    "物料编码",
+    "零件编码",
+    "编码",
+    "part no",
+    "part number",
+    "part code"
+  ].map((name) => String(name || "").trim().toLowerCase());
+  for (const candidate of candidates) {
+    const index = normalized.indexOf(candidate);
+    if (index >= 0) return index;
+  }
+  return 0;
+}
+
+function rowsToParts(rows) {
+  if (!rows.length) return [];
+  const headers = rows[0] || [];
+  const codeIndex = findHeaderIndex(headers, $("#drawingColumnName").value);
+  const nameIndex = findHeaderIndex(headers, "零件名称");
+  const qtyIndex = findHeaderIndex(headers, "数量");
+  const warehouseIndex = findHeaderIndex(headers, "库位");
+  const dataRows = rows.slice(1).filter((row) => row.some((cell) => String(cell || "").trim()));
+
+  return dataRows
+    .map((row) => normalizePart({
+      code: row[codeIndex] || "",
+      name: nameIndex === codeIndex ? "" : row[nameIndex] || "",
+      quantity: qtyIndex === codeIndex ? 1 : row[qtyIndex] || 1,
+      warehouse: warehouseIndex === codeIndex ? "" : row[warehouseIndex] || ""
+    }))
+    .filter((part) => part.code);
+}
+
+async function readExcelFile(file) {
+  if (!window.XLSX) {
+    addLog("Excel 解析库未加载，请检查网络后刷新页面。");
+    return;
+  }
+  const buffer = await file.arrayBuffer();
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, raw: false });
+  const parts = rowsToParts(rows);
+  if (!parts.length) {
+    addLog("Excel 中没有识别到零件图号，请检查图号列名。");
+    return;
+  }
+  state.partTemplate.parts = parts;
+  renderParts();
+  updatePreview();
+  addLog(`已从 Excel 读取 ${parts.length} 个零件图号。`);
+}
+
 function applyBom(append) {
   const parts = parseBomText($("#bomText").value);
   if (!parts.length) {
@@ -263,9 +329,11 @@ function loadConfig(config) {
       name: config.partTemplate?.name || "BOM 生产领料",
       rowClickRule: config.partTemplate?.rowClickRule || "byPartCode",
       finalButton: config.partTemplate?.finalButton || "",
+      selectPartButtonTarget: config.partTemplate?.selectPartButtonTarget || config.partTemplate?.addPartButtonTarget || "",
       partSearchTarget: config.partTemplate?.partSearchTarget || "",
       quantityTarget: config.partTemplate?.quantityTarget || "",
-      addPartButtonTarget: config.partTemplate?.addPartButtonTarget || "",
+      partConfirmButtonTarget: config.partTemplate?.partConfirmButtonTarget || config.partTemplate?.addPartButtonTarget || "",
+      drawingColumnName: config.partTemplate?.drawingColumnName || "零件图号",
       parts: Array.isArray(config.partTemplate?.parts) ? config.partTemplate.parts.map(normalizePart) : []
     },
     settings: {
@@ -377,9 +445,11 @@ function bindActions() {
     "templateName",
     "rowClickRule",
     "finalButton",
+    "selectPartButtonTarget",
     "partSearchTarget",
     "quantityTarget",
-    "addPartButtonTarget",
+    "partConfirmButtonTarget",
+    "drawingColumnName",
     "browserType",
     "defaultWait",
     "failureMode",
@@ -410,6 +480,13 @@ function bindActions() {
     const text = await file.text();
     loadConfig(JSON.parse(text));
     addLog(`已导入配置：${file.name}`);
+    event.target.value = "";
+  });
+
+  $("#excelFile").addEventListener("change", async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    await readExcelFile(file);
     event.target.value = "";
   });
 

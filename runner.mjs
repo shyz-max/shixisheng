@@ -90,6 +90,11 @@ async function choosePartRow(page, template, part) {
 }
 
 async function addIssuePart(page, template, part, defaultWait) {
+  if (template.selectPartButtonTarget) {
+    await targetLocator(page, template.selectPartButtonTarget).click();
+    await page.waitForTimeout(Number(defaultWait || 0));
+  }
+
   if (template.partSearchTarget && part.code) {
     const search = targetLocator(page, template.partSearchTarget);
     await search.fill(part.code);
@@ -103,8 +108,9 @@ async function addIssuePart(page, template, part, defaultWait) {
     await targetLocator(page, template.quantityTarget).fill(String(part.quantity || 0));
   }
 
-  if (template.addPartButtonTarget) {
-    await targetLocator(page, template.addPartButtonTarget).click();
+  const confirmTarget = template.partConfirmButtonTarget || template.addPartButtonTarget;
+  if (confirmTarget) {
+    await targetLocator(page, confirmTarget).click();
     await page.waitForTimeout(Number(defaultWait || 0));
   }
 }

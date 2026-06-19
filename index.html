@@ -131,16 +131,31 @@
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="partSearchTarget">零件搜索框</label>
-          <input id="partSearchTarget" type="text" placeholder="#partCode 或 input[name='partCode']">
+          <label for="selectPartButtonTarget">每个零件先点击</label>
+          <input id="selectPartButtonTarget" type="text" placeholder="选择零件、新增、#selectPart">
         </div>
+        <div class="editor-block">
+          <label for="partSearchTarget">子表图号搜索框</label>
+          <input id="partSearchTarget" type="text" placeholder="#drawingNo 或 input[name='partCode']">
+        </div>
+        <div class="editor-block">
+          <label for="partConfirmButtonTarget">子表确认添加按钮</label>
+          <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
+        </div>
+      </div>
+
+      <div class="template-grid">
         <div class="editor-block">
           <label for="quantityTarget">数量输入框</label>
           <input id="quantityTarget" type="text" placeholder="#qty 或 input[name='quantity']">
         </div>
         <div class="editor-block">
-          <label for="addPartButtonTarget">每个零件确认/新增按钮</label>
-          <input id="addPartButtonTarget" type="text" placeholder="新增、确定、#addPart">
+          <label for="excelFile">上传 Excel 领料清单</label>
+          <input id="excelFile" type="file" accept=".xlsx,.xls,.csv,.tsv">
+        </div>
+        <div class="editor-block">
+          <label for="drawingColumnName">图号列名</label>
+          <input id="drawingColumnName" type="text" value="零件图号" placeholder="例如：零件图号、图号、物料编码">
         </div>
       </div>
 
@@ -157,7 +172,7 @@
       </div>
 
       <div class="hint">
-        一个申请单可包含多个零件。执行时会按下面清单逐个搜索/选择零件、填写数量、点击每个零件的“新增/确定”，最后统一点击提交。
+        一个申请单可包含多个零件。执行时会按 Excel 图号清单循环：先点击“选择/新增零件”，在弹出的子表里搜索零件图号，确认添加，再继续第二个、第三个，最后统一提交。
       </div>
       <div id="partsList" class="stack"></div>
     </section>
@@ -313,6 +328,7 @@
     </article>
   </template>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
