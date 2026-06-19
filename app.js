@@ -119,6 +119,15 @@ function updatePreview() {
   $("#configPreview").textContent = JSON.stringify(getConfig(), null, 2);
 }
 
+function updateStepValueField(node, action) {
+  const valueField = $("[data-field='value']", node);
+  if (!valueField) return;
+  const isButtonOnly = action === "buttonClick" || action === "click";
+  valueField.disabled = isButtonOnly;
+  valueField.placeholder = isButtonOnly ? "点击按钮不需要填写" : "";
+  if (isButtonOnly) valueField.value = "";
+}
+
 function renderSteps() {
   const list = $("#stepsList");
   list.innerHTML = "";
@@ -127,12 +136,24 @@ function renderSteps() {
     $(".step-number", node).textContent = `第 ${index + 1} 步`;
     $$("[data-field]", node).forEach((field) => {
       field.value = step[field.dataset.field] ?? "";
-      field.addEventListener("input", () => {
+      const handleFieldChange = () => {
         const key = field.dataset.field;
         state.steps[index][key] = key === "waitMs" ? Number(field.value || 0) : field.value;
+        if (key === "action") {
+          updateStepValueField(node, field.value);
+          if (field.value === "buttonClick" || field.value === "click") {
+            state.steps[index].value = "";
+          }
+        }
         updatePreview();
-      });
+      };
+      field.addEventListener("input", handleFieldChange);
+      field.addEventListener("change", handleFieldChange);
     });
+    updateStepValueField(node, step.action);
+    if (step.action === "buttonClick" || step.action === "click") {
+      state.steps[index].value = "";
+    }
     $(".remove-step", node).addEventListener("click", () => {
       state.steps.splice(index, 1);
       renderSteps();
