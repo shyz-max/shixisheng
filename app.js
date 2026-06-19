@@ -3,6 +3,15 @@ const STORAGE_KEY = "mes-outbound-flow-config";
 const state = {
   flowName: "MES 零件出库申请",
   mesUrl: "",
+  login: {
+    enabled: true,
+    username: "",
+    password: "",
+    usernameTarget: "#username",
+    passwordTarget: "#password",
+    loginButtonTarget: "登录",
+    waitMs: 1200
+  },
   steps: [
     {
       name: "打开出库申请菜单",
@@ -62,6 +71,15 @@ function getConfig() {
   return {
     flowName: $("#flowName").value.trim(),
     mesUrl: $("#mesUrl").value.trim(),
+    login: {
+      enabled: $("#loginEnabled").value === "true",
+      username: $("#loginUsername").value.trim(),
+      password: $("#loginPassword").value,
+      usernameTarget: $("#usernameTarget").value.trim(),
+      passwordTarget: $("#passwordTarget").value.trim(),
+      loginButtonTarget: $("#loginButtonTarget").value.trim(),
+      waitMs: Number($("#loginWaitMs").value || 0)
+    },
     steps: state.steps,
     partTemplate: {
       name: $("#templateName").value.trim(),
@@ -81,6 +99,13 @@ function getConfig() {
 function syncTopFields(config = state) {
   $("#flowName").value = config.flowName || "";
   $("#mesUrl").value = config.mesUrl || "";
+  $("#loginEnabled").value = String(config.login?.enabled ?? true);
+  $("#loginUsername").value = config.login?.username || "";
+  $("#loginPassword").value = config.login?.password || "";
+  $("#usernameTarget").value = config.login?.usernameTarget || "#username";
+  $("#passwordTarget").value = config.login?.passwordTarget || "#password";
+  $("#loginButtonTarget").value = config.login?.loginButtonTarget || "登录";
+  $("#loginWaitMs").value = config.login?.waitMs ?? 1200;
   $("#templateName").value = config.partTemplate?.name || "";
   $("#rowClickRule").value = config.partTemplate?.rowClickRule || "byPartCode";
   $("#finalButton").value = config.partTemplate?.finalButton || "";
@@ -144,6 +169,15 @@ function loadConfig(config) {
   Object.assign(state, {
     flowName: config.flowName || state.flowName,
     mesUrl: config.mesUrl || "",
+    login: {
+      enabled: config.login?.enabled ?? true,
+      username: config.login?.username || "",
+      password: config.login?.password || "",
+      usernameTarget: config.login?.usernameTarget || "#username",
+      passwordTarget: config.login?.passwordTarget || "#password",
+      loginButtonTarget: config.login?.loginButtonTarget || "登录",
+      waitMs: Number(config.login?.waitMs ?? 1200)
+    },
     steps: Array.isArray(config.steps) ? config.steps : [],
     partTemplate: {
       name: config.partTemplate?.name || "零件模板",
@@ -174,6 +208,12 @@ function simulateRun() {
   const config = getConfig();
   $("#runLog").innerHTML = "";
   addLog(`准备打开 MES：${config.mesUrl || "未填写地址"}`);
+  if (config.login.enabled) {
+    addLog(`自动登录账号：${config.login.username || "未填写账号"}`);
+    addLog(`填写账号框：${config.login.usernameTarget || "未配置"}`);
+    addLog(`填写密码框：${config.login.passwordTarget || "未配置"}`);
+    addLog(`点击登录按钮：${config.login.loginButtonTarget || "未配置"}`);
+  }
   config.steps.forEach((step, index) => {
     addLog(`第 ${index + 1} 步：${step.action} -> ${step.targetType}:${step.target || "未填写目标"}`);
   });
@@ -213,7 +253,24 @@ function bindActions() {
     updatePreview();
   });
 
-  ["flowName", "mesUrl", "templateName", "rowClickRule", "finalButton", "browserType", "defaultWait", "failureMode", "requireConfirm"].forEach((id) => {
+  [
+    "flowName",
+    "mesUrl",
+    "loginEnabled",
+    "loginUsername",
+    "loginPassword",
+    "usernameTarget",
+    "passwordTarget",
+    "loginButtonTarget",
+    "loginWaitMs",
+    "templateName",
+    "rowClickRule",
+    "finalButton",
+    "browserType",
+    "defaultWait",
+    "failureMode",
+    "requireConfirm"
+  ].forEach((id) => {
     $(`#${id}`).addEventListener("input", updatePreview);
     $(`#${id}`).addEventListener("change", updatePreview);
   });

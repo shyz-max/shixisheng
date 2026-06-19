@@ -11,6 +11,18 @@ function readConfig() {
   return JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
 
+function looksLikeSelector(target) {
+  return /^(#|\.|\[|button|input|select|textarea|a|tr|td|div|span|xpath=)/.test(target) || target.includes(":has-text");
+}
+
+function targetLocator(page, target) {
+  if (!target) return null;
+  if (target.startsWith("//")) return page.locator(`xpath=${target}`);
+  if (target.startsWith("xpath=")) return page.locator(target);
+  if (looksLikeSelector(target)) return page.locator(target);
+  return page.getByText(target, { exact: true });
+}
+
 function locatorFor(page, step) {
   const target = step.target || "";
   if (step.targetType === "css") return page.locator(target);
@@ -19,8 +31,16 @@ function locatorFor(page, step) {
   return null;
 }
 
-function looksLikeSelector(target) {
-  return /^(#|\.|\[|button|input|select|textarea|a|tr|td|div|span|xpath=)/.test(target) || target.includes(":has-text");
+async function autoLogin(page, login, defaultWait) {
+  if (!login?.enabled) return;
+  if (!login.usernameTarget || !login.passwordTarget || !login.loginButtonTarget) {
+    throw new Error("已启用自动登录，但账号框、密码框或登录按钮没有配置完整");
+  }
+
+  await targetLocator(page, login.usernameTarget).fill(login.username || "");
+  await targetLocator(page, login.passwordTarget).fill(login.password || "");
+  await targetLocator(page, login.loginButtonTarget).click();
+  await page.waitForTimeout(Number(login.waitMs || defaultWait || 0));
 }
 
 async function runStep(page, step, defaultWait) {
@@ -74,6 +94,7 @@ test("MES 零件出库申请", async ({ page }) => {
   if (!config.mesUrl) throw new Error("配置里没有填写 MES 地址");
 
   await page.goto(config.mesUrl);
+  await autoLogin(page, config.login, config.settings?.defaultWait);
 
   for (const step of config.steps || []) {
     try {
@@ -90,12 +111,6 @@ test("MES 零件出库申请", async ({ page }) => {
 
   const finalButton = config.partTemplate?.finalButton;
   if (finalButton) {
-    if (finalButton.startsWith("//")) {
-      await page.locator(`xpath=${finalButton}`).click();
-    } else if (looksLikeSelector(finalButton)) {
-      await page.locator(finalButton).click();
-    } else {
-      await page.getByText(finalButton, { exact: true }).click();
-    }
+    await targetLocator(page, finalButton).click();
   }
 });

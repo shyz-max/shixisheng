@@ -13,7 +13,8 @@
       <h1>零件出库申请工具</h1>
     </div>
     <nav class="tabs" aria-label="功能区">
-      <button class="tab active" data-tab="workflow">流程步骤</button>
+      <button class="tab active" data-tab="login">系统登录</button>
+      <button class="tab" data-tab="workflow">流程步骤</button>
       <button class="tab" data-tab="parts">零件模板</button>
       <button class="tab" data-tab="settings">执行设置</button>
       <button class="tab" data-tab="preview">配置预览</button>
@@ -41,7 +42,52 @@
       <button id="runSimulation" class="primary">模拟执行</button>
     </section>
 
-    <section id="workflow" class="panel active" aria-labelledby="workflowTitle">
+    <section id="login" class="panel active" aria-labelledby="loginTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">LOGIN</p>
+          <h2 id="loginTitle">系统账号登录</h2>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <label>
+          启用自动登录
+          <select id="loginEnabled">
+            <option value="true">启用</option>
+            <option value="false">不启用</option>
+          </select>
+        </label>
+        <label>
+          系统账号
+          <input id="loginUsername" type="text" autocomplete="username" placeholder="请输入 MES 账号">
+        </label>
+        <label>
+          系统密码
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="请输入 MES 密码">
+        </label>
+        <label>
+          账号输入框
+          <input id="usernameTarget" type="text" placeholder="#username 或 input[name='user']">
+        </label>
+        <label>
+          密码输入框
+          <input id="passwordTarget" type="text" placeholder="#password 或 input[type='password']">
+        </label>
+        <label>
+          登录按钮
+          <input id="loginButtonTarget" type="text" placeholder="#loginBtn 或 登录">
+        </label>
+        <label>
+          登录后等待毫秒
+          <input id="loginWaitMs" type="number" min="0" step="100" value="1200">
+        </label>
+      </div>
+      <div class="hint">
+        登录按钮可填写 CSS 选择器、XPath，或按钮文字。密码会进入导出的 JSON，请只在自己电脑上保存配置。
+      </div>
+    </section>
+
+    <section id="workflow" class="panel" aria-labelledby="workflowTitle">
       <div class="section-head">
         <div>
           <p class="eyebrow">CUSTOM STEPS</p>
@@ -75,7 +121,7 @@
         </div>
         <div class="editor-block">
           <label for="finalButton">最后点击按钮</label>
-          <input id="finalButton" type="text" placeholder="例如：button:has-text('提交') 或 #submit">
+          <input id="finalButton" type="text" placeholder="例如：提交、#submit、//button[.='提交']">
         </div>
       </div>
       <div id="partsList" class="stack"></div>
@@ -114,7 +160,7 @@
         </label>
       </div>
       <div class="hint">
-        目标可以写 CSS 选择器、XPath、按钮文字、坐标，或备注给后续自动化脚本使用。
+        目标可以写 CSS 选择器、XPath、按钮文字、坐标，或备注给自动化脚本使用。
       </div>
     </section>
 
