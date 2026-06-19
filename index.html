@@ -13,15 +13,15 @@
       <h1>零件出库申请工具</h1>
     </div>
     <nav class="tabs" aria-label="功能区">
-      <button class="tab active" data-tab="login">系统登录</button>
-      <button class="tab" data-tab="workflow">流程步骤</button>
-      <button class="tab" data-tab="parts">零件模板</button>
-      <button class="tab" data-tab="settings">执行设置</button>
-      <button class="tab" data-tab="preview">配置预览</button>
+      <button class="tab active" data-tab="login" type="button">系统登录</button>
+      <button class="tab" data-tab="workflow" type="button">流程步骤</button>
+      <button class="tab" data-tab="parts" type="button">零件模板</button>
+      <button class="tab" data-tab="settings" type="button">执行设置</button>
+      <button class="tab" data-tab="preview" type="button">配置预览</button>
     </nav>
     <div class="storage">
-      <button id="saveConfig">保存</button>
-      <button id="exportConfig">导出 JSON</button>
+      <button id="saveConfig" type="button">保存</button>
+      <button id="exportConfig" type="button">导出 JSON</button>
       <label class="file-button">
         导入 JSON
         <input id="importConfig" type="file" accept="application/json">
@@ -39,7 +39,7 @@
         <label for="mesUrl">MES 地址</label>
         <input id="mesUrl" type="url" placeholder="http://mes.example.com">
       </div>
-      <button id="runSimulation" class="primary">模拟执行</button>
+      <button id="runSimulation" class="primary" type="button">模拟执行</button>
     </section>
 
     <section id="login" class="panel active" aria-labelledby="loginTitle">
@@ -94,8 +94,8 @@
           <h2 id="workflowTitle">点击与录入顺序</h2>
         </div>
         <div class="actions">
-          <button id="addButtonStep">添加按钮点击</button>
-          <button id="addStep">添加步骤</button>
+          <button id="addButtonStep" type="button">添加按钮点击</button>
+          <button id="addStep" type="button">添加步骤</button>
         </div>
       </div>
       <div id="stepsList" class="stack"></div>
@@ -107,7 +107,7 @@
           <p class="eyebrow">PART TEMPLATES</p>
           <h2 id="partsTitle">零件选择模板</h2>
         </div>
-        <button id="addPart">添加零件</button>
+        <button id="addPart" type="button">新增零件</button>
       </div>
       <div class="template-grid">
         <div class="editor-block">
@@ -173,7 +173,7 @@
           <p class="eyebrow">JSON</p>
           <h2 id="previewTitle">配置预览</h2>
         </div>
-        <button id="copyConfig">复制</button>
+        <button id="copyConfig" type="button">复制</button>
       </div>
       <pre id="configPreview"></pre>
     </section>
@@ -184,7 +184,7 @@
           <p class="eyebrow">RUN LOG</p>
           <h2>执行记录</h2>
         </div>
-        <button id="clearLog">清空</button>
+        <button id="clearLog" type="button">清空</button>
       </div>
       <ol id="runLog"></ol>
     </section>
@@ -194,7 +194,7 @@
     <article class="item step-item">
       <header>
         <strong class="step-number"></strong>
-        <button class="ghost remove-step">删除</button>
+        <button class="ghost remove-step" type="button">删除</button>
       </header>
       <div class="item-grid">
         <label>
@@ -242,7 +242,7 @@
     <article class="item part-item">
       <header>
         <strong class="part-title"></strong>
-        <button class="ghost remove-part">删除</button>
+        <button class="ghost remove-part" type="button">删除</button>
       </header>
       <div class="item-grid">
         <label>

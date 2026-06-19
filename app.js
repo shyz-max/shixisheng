@@ -15,7 +15,7 @@ const state = {
   steps: [
     {
       name: "打开出库申请菜单",
-      action: "click",
+      action: "buttonClick",
       targetType: "text",
       target: "出库申请",
       value: "",
@@ -119,8 +119,8 @@ function updatePreview() {
   $("#configPreview").textContent = JSON.stringify(getConfig(), null, 2);
 }
 
-function updateStepValueField(node, action) {
-  const valueField = $("[data-field='value']", node);
+function updateStepValueField(item, action) {
+  const valueField = $("[data-field='value']", item);
   if (!valueField) return;
   const isButtonOnly = action === "buttonClick" || action === "click";
   valueField.disabled = isButtonOnly;
@@ -128,38 +128,44 @@ function updateStepValueField(node, action) {
   if (isButtonOnly) valueField.value = "";
 }
 
+function normalizeClickStep(step) {
+  if (step.action === "buttonClick" || step.action === "click") {
+    step.value = "";
+  }
+  return step;
+}
+
 function renderSteps() {
   const list = $("#stepsList");
   list.innerHTML = "";
   state.steps.forEach((step, index) => {
-    const node = $("#stepTemplate").content.cloneNode(true);
-    $(".step-number", node).textContent = `第 ${index + 1} 步`;
-    $$("[data-field]", node).forEach((field) => {
+    normalizeClickStep(step);
+    const fragment = $("#stepTemplate").content.cloneNode(true);
+    const item = $(".step-item", fragment);
+    $(".step-number", item).textContent = `第 ${index + 1} 步`;
+
+    $$("[data-field]", item).forEach((field) => {
       field.value = step[field.dataset.field] ?? "";
       const handleFieldChange = () => {
         const key = field.dataset.field;
         state.steps[index][key] = key === "waitMs" ? Number(field.value || 0) : field.value;
         if (key === "action") {
-          updateStepValueField(node, field.value);
-          if (field.value === "buttonClick" || field.value === "click") {
-            state.steps[index].value = "";
-          }
+          normalizeClickStep(state.steps[index]);
+          updateStepValueField(item, field.value);
         }
         updatePreview();
       };
       field.addEventListener("input", handleFieldChange);
       field.addEventListener("change", handleFieldChange);
     });
-    updateStepValueField(node, step.action);
-    if (step.action === "buttonClick" || step.action === "click") {
-      state.steps[index].value = "";
-    }
-    $(".remove-step", node).addEventListener("click", () => {
+
+    updateStepValueField(item, step.action);
+    $(".remove-step", item).addEventListener("click", () => {
       state.steps.splice(index, 1);
       renderSteps();
       updatePreview();
     });
-    list.appendChild(node);
+    list.appendChild(fragment);
   });
 }
 
@@ -167,22 +173,27 @@ function renderParts() {
   const list = $("#partsList");
   list.innerHTML = "";
   state.partTemplate.parts.forEach((part, index) => {
-    const node = $("#partTemplate").content.cloneNode(true);
-    $(".part-title", node).textContent = `零件 ${index + 1}`;
-    $$("[data-field]", node).forEach((field) => {
+    const fragment = $("#partTemplate").content.cloneNode(true);
+    const item = $(".part-item", fragment);
+    $(".part-title", item).textContent = `零件 ${index + 1}`;
+
+    $$("[data-field]", item).forEach((field) => {
       field.value = part[field.dataset.field] ?? "";
-      field.addEventListener("input", () => {
+      const handleFieldChange = () => {
         const key = field.dataset.field;
         state.partTemplate.parts[index][key] = key === "quantity" ? Number(field.value || 0) : field.value;
         updatePreview();
-      });
+      };
+      field.addEventListener("input", handleFieldChange);
+      field.addEventListener("change", handleFieldChange);
     });
-    $(".remove-part", node).addEventListener("click", () => {
+
+    $(".remove-part", item).addEventListener("click", () => {
       state.partTemplate.parts.splice(index, 1);
       renderParts();
       updatePreview();
     });
-    list.appendChild(node);
+    list.appendChild(fragment);
   });
 }
 
@@ -199,7 +210,7 @@ function loadConfig(config) {
       loginButtonTarget: config.login?.loginButtonTarget || "登录",
       waitMs: Number(config.login?.waitMs ?? 1200)
     },
-    steps: Array.isArray(config.steps) ? config.steps : [],
+    steps: Array.isArray(config.steps) ? config.steps.map(normalizeClickStep) : [],
     partTemplate: {
       name: config.partTemplate?.name || "零件模板",
       rowClickRule: config.partTemplate?.rowClickRule || "byPartCode",
@@ -258,9 +269,28 @@ function simulateRun() {
   }
 }
 
+function addStep(step) {
+  state.steps.push(normalizeClickStep(step));
+  renderSteps();
+  updatePreview();
+}
+
+function addPart() {
+  state.partTemplate.parts.push({
+    code: "",
+    name: "",
+    quantity: 1,
+    rowTarget: "",
+    warehouse: "",
+    remark: ""
+  });
+  renderParts();
+  updatePreview();
+}
+
 function bindActions() {
   $("#addStep").addEventListener("click", () => {
-    state.steps.push({
+    addStep({
       name: `自定义步骤 ${state.steps.length + 1}`,
       action: "click",
       targetType: "text",
@@ -268,12 +298,10 @@ function bindActions() {
       value: "",
       waitMs: Number($("#defaultWait").value || 800)
     });
-    renderSteps();
-    updatePreview();
   });
 
   $("#addButtonStep").addEventListener("click", () => {
-    state.steps.push({
+    addStep({
       name: `点击按钮 ${state.steps.length + 1}`,
       action: "buttonClick",
       targetType: "text",
@@ -281,22 +309,9 @@ function bindActions() {
       value: "",
       waitMs: Number($("#defaultWait").value || 800)
     });
-    renderSteps();
-    updatePreview();
   });
 
-  $("#addPart").addEventListener("click", () => {
-    state.partTemplate.parts.push({
-      code: "",
-      name: "",
-      quantity: 1,
-      rowTarget: "",
-      warehouse: "",
-      remark: ""
-    });
-    renderParts();
-    updatePreview();
-  });
+  $("#addPart").addEventListener("click", addPart);
 
   [
     "flowName",
@@ -359,7 +374,13 @@ function init() {
   const saved = localStorage.getItem(STORAGE_KEY);
   bindTabs();
   bindActions();
-  loadConfig(saved ? JSON.parse(saved) : state);
+  try {
+    loadConfig(saved ? JSON.parse(saved) : state);
+  } catch (error) {
+    localStorage.removeItem(STORAGE_KEY);
+    loadConfig(state);
+    addLog("旧配置读取失败，已恢复默认配置。");
+  }
 }
 
 init();
