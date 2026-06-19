@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MES 零件出库申请编排工具</title>
+  <title>MES 生产领料申请编排工具</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <aside class="sidebar">
     <div>
       <p class="eyebrow">MES FLOW BUILDER</p>
-      <h1>零件出库申请工具</h1>
+      <h1>生产领料申请工具</h1>
     </div>
     <nav class="tabs" aria-label="功能区">
       <button class="tab active" data-tab="login" type="button">系统登录</button>
       <button class="tab" data-tab="workflow" type="button">流程步骤</button>
-      <button class="tab" data-tab="parts" type="button">零件模板</button>
+      <button class="tab" data-tab="parts" type="button">BOM 领料</button>
       <button class="tab" data-tab="settings" type="button">执行设置</button>
       <button class="tab" data-tab="preview" type="button">配置预览</button>
     </nav>
@@ -33,7 +33,7 @@
     <section class="topbar">
       <div>
         <label for="flowName">流程名称</label>
-        <input id="flowName" type="text" value="MES 零件出库申请">
+        <input id="flowName" type="text" value="MES 生产领料申请">
       </div>
       <div>
         <label for="mesUrl">MES 地址</label>
@@ -91,7 +91,7 @@
       <div class="section-head">
         <div>
           <p class="eyebrow">CUSTOM STEPS</p>
-          <h2 id="workflowTitle">点击与录入顺序</h2>
+          <h2 id="workflowTitle">申请单前置步骤</h2>
         </div>
         <div class="actions">
           <button id="addButtonStep" type="button">添加按钮点击</button>
@@ -104,15 +104,16 @@
     <section id="parts" class="panel" aria-labelledby="partsTitle">
       <div class="section-head">
         <div>
-          <p class="eyebrow">PART TEMPLATES</p>
-          <h2 id="partsTitle">零件选择模板</h2>
+          <p class="eyebrow">BOM ISSUE</p>
+          <h2 id="partsTitle">BOM 多零件领料</h2>
         </div>
         <button id="addPart" type="button">新增零件</button>
       </div>
+
       <div class="template-grid">
         <div class="editor-block">
           <label for="templateName">模板名称</label>
-          <input id="templateName" type="text" value="常用出库零件">
+          <input id="templateName" type="text" value="BOM 生产领料">
         </div>
         <div class="editor-block">
           <label for="rowClickRule">选中行规则</label>
@@ -123,9 +124,40 @@
           </select>
         </div>
         <div class="editor-block">
-          <label for="finalButton">最后点击按钮</label>
+          <label for="finalButton">所有零件选完后点击</label>
           <input id="finalButton" type="text" placeholder="例如：提交、#submit、//button[.='提交']">
         </div>
+      </div>
+
+      <div class="template-grid">
+        <div class="editor-block">
+          <label for="partSearchTarget">零件搜索框</label>
+          <input id="partSearchTarget" type="text" placeholder="#partCode 或 input[name='partCode']">
+        </div>
+        <div class="editor-block">
+          <label for="quantityTarget">数量输入框</label>
+          <input id="quantityTarget" type="text" placeholder="#qty 或 input[name='quantity']">
+        </div>
+        <div class="editor-block">
+          <label for="addPartButtonTarget">每个零件确认/新增按钮</label>
+          <input id="addPartButtonTarget" type="text" placeholder="新增、确定、#addPart">
+        </div>
+      </div>
+
+      <div class="bom-box">
+        <label for="bomText">
+          粘贴 BOM 清单
+          <textarea id="bomText" rows="7" placeholder="从 Excel 复制后粘贴。支持：零件编码	零件名称	数量	库位	备注"></textarea>
+        </label>
+        <div class="actions">
+          <button id="parseBom" type="button">按 BOM 生成零件</button>
+          <button id="appendBom" type="button">追加到现有零件</button>
+          <button id="clearParts" type="button">清空零件</button>
+        </div>
+      </div>
+
+      <div class="hint">
+        一个申请单可包含多个零件。执行时会按下面清单逐个搜索/选择零件、填写数量、点击每个零件的“新增/确定”，最后统一点击提交。
       </div>
       <div id="partsList" class="stack"></div>
     </section>
@@ -224,7 +256,7 @@
         </label>
         <label>
           目标
-          <input data-field="target" type="text" placeholder="例如：出库申请 / #submit / //button[.='确定']">
+          <input data-field="target" type="text" placeholder="例如：生产领料 / #submit / //button[.='确定']">
         </label>
         <label>
           输入/选择值
@@ -254,8 +286,8 @@
           <input data-field="name" type="text">
         </label>
         <label>
-          数量
-          <input data-field="quantity" type="number" min="1" step="1">
+          领料数量
+          <input data-field="quantity" type="number" min="0" step="0.001">
         </label>
         <label>
           行号/选择器
@@ -264,6 +296,14 @@
         <label>
           库位
           <input data-field="warehouse" type="text">
+        </label>
+        <label>
+          工位/工序
+          <input data-field="station" type="text">
+        </label>
+        <label>
+          替代料
+          <input data-field="substitute" type="text">
         </label>
         <label>
           备注

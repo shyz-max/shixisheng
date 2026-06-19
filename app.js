@@ -1,7 +1,7 @@
 const STORAGE_KEY = "mes-outbound-flow-config";
 
 const state = {
-  flowName: "MES 零件出库申请",
+  flowName: "MES 生产领料申请",
   mesUrl: "",
   login: {
     enabled: true,
@@ -14,26 +14,21 @@ const state = {
   },
   steps: [
     {
-      name: "打开出库申请菜单",
+      name: "打开生产领料菜单",
       action: "buttonClick",
       targetType: "text",
-      target: "出库申请",
+      target: "生产领料",
       value: "",
-      waitMs: 800
-    },
-    {
-      name: "选择申请类型",
-      action: "select",
-      targetType: "css",
-      target: "#applyType",
-      value: "零件出库",
       waitMs: 800
     }
   ],
   partTemplate: {
-    name: "常用出库零件",
+    name: "BOM 生产领料",
     rowClickRule: "byPartCode",
     finalButton: "",
+    partSearchTarget: "",
+    quantityTarget: "",
+    addPartButtonTarget: "",
     parts: [
       {
         code: "P001",
@@ -41,6 +36,8 @@ const state = {
         quantity: 1,
         rowTarget: "",
         warehouse: "",
+        station: "",
+        substitute: "",
         remark: ""
       }
     ]
@@ -85,6 +82,9 @@ function getConfig() {
       name: $("#templateName").value.trim(),
       rowClickRule: $("#rowClickRule").value,
       finalButton: $("#finalButton").value.trim(),
+      partSearchTarget: $("#partSearchTarget").value.trim(),
+      quantityTarget: $("#quantityTarget").value.trim(),
+      addPartButtonTarget: $("#addPartButtonTarget").value.trim(),
       parts: state.partTemplate.parts
     },
     settings: {
@@ -109,6 +109,9 @@ function syncTopFields(config = state) {
   $("#templateName").value = config.partTemplate?.name || "";
   $("#rowClickRule").value = config.partTemplate?.rowClickRule || "byPartCode";
   $("#finalButton").value = config.partTemplate?.finalButton || "";
+  $("#partSearchTarget").value = config.partTemplate?.partSearchTarget || "";
+  $("#quantityTarget").value = config.partTemplate?.quantityTarget || "";
+  $("#addPartButtonTarget").value = config.partTemplate?.addPartButtonTarget || "";
   $("#browserType").value = config.settings?.browserType || "chrome";
   $("#defaultWait").value = config.settings?.defaultWait ?? 800;
   $("#failureMode").value = config.settings?.failureMode || "pause";
@@ -133,6 +136,19 @@ function normalizeClickStep(step) {
     step.value = "";
   }
   return step;
+}
+
+function normalizePart(part = {}) {
+  return {
+    code: part.code || "",
+    name: part.name || "",
+    quantity: Number(part.quantity || 0),
+    rowTarget: part.rowTarget || "",
+    warehouse: part.warehouse || "",
+    station: part.station || "",
+    substitute: part.substitute || "",
+    remark: part.remark || ""
+  };
 }
 
 function renderSteps() {
@@ -173,15 +189,18 @@ function renderParts() {
   const list = $("#partsList");
   list.innerHTML = "";
   state.partTemplate.parts.forEach((part, index) => {
+    const normalized = normalizePart(part);
+    state.partTemplate.parts[index] = normalized;
     const fragment = $("#partTemplate").content.cloneNode(true);
     const item = $(".part-item", fragment);
-    $(".part-title", item).textContent = `零件 ${index + 1}`;
+    $(".part-title", item).textContent = `零件 ${index + 1}：${normalized.code || "未填编码"}`;
 
     $$("[data-field]", item).forEach((field) => {
-      field.value = part[field.dataset.field] ?? "";
+      field.value = normalized[field.dataset.field] ?? "";
       const handleFieldChange = () => {
         const key = field.dataset.field;
         state.partTemplate.parts[index][key] = key === "quantity" ? Number(field.value || 0) : field.value;
+        $(".part-title", item).textContent = `零件 ${index + 1}：${state.partTemplate.parts[index].code || "未填编码"}`;
         updatePreview();
       };
       field.addEventListener("input", handleFieldChange);
@@ -195,6 +214,35 @@ function renderParts() {
     });
     list.appendChild(fragment);
   });
+}
+
+function parseBomText(text) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.split(/\t|,|，/).map((cell) => cell.trim()))
+    .filter((cells) => cells.length && !/^(零件编码|编码|part|part\s*code)$/i.test(cells[0]))
+    .map((cells) => normalizePart({
+      code: cells[0],
+      name: cells[1] || "",
+      quantity: cells[2] || 1,
+      warehouse: cells[3] || "",
+      remark: cells.slice(4).join(" ")
+    }))
+    .filter((part) => part.code);
+}
+
+function applyBom(append) {
+  const parts = parseBomText($("#bomText").value);
+  if (!parts.length) {
+    addLog("没有解析到 BOM 零件，请检查粘贴内容。");
+    return;
+  }
+  state.partTemplate.parts = append ? state.partTemplate.parts.concat(parts) : parts;
+  renderParts();
+  updatePreview();
+  addLog(`已从 BOM ${append ? "追加" : "生成"} ${parts.length} 个零件。`);
 }
 
 function loadConfig(config) {
@@ -212,10 +260,13 @@ function loadConfig(config) {
     },
     steps: Array.isArray(config.steps) ? config.steps.map(normalizeClickStep) : [],
     partTemplate: {
-      name: config.partTemplate?.name || "零件模板",
+      name: config.partTemplate?.name || "BOM 生产领料",
       rowClickRule: config.partTemplate?.rowClickRule || "byPartCode",
       finalButton: config.partTemplate?.finalButton || "",
-      parts: Array.isArray(config.partTemplate?.parts) ? config.partTemplate.parts : []
+      partSearchTarget: config.partTemplate?.partSearchTarget || "",
+      quantityTarget: config.partTemplate?.quantityTarget || "",
+      addPartButtonTarget: config.partTemplate?.addPartButtonTarget || "",
+      parts: Array.isArray(config.partTemplate?.parts) ? config.partTemplate.parts.map(normalizePart) : []
     },
     settings: {
       browserType: config.settings?.browserType || "chrome",
@@ -242,18 +293,17 @@ function simulateRun() {
   addLog(`准备打开 MES：${config.mesUrl || "未填写地址"}`);
   if (config.login.enabled) {
     addLog(`自动登录账号：${config.login.username || "未填写账号"}`);
-    addLog(`填写账号框：${config.login.usernameTarget || "未配置"}`);
-    addLog(`填写密码框：${config.login.passwordTarget || "未配置"}`);
     addLog(`点击登录按钮：${config.login.loginButtonTarget || "未配置"}`);
   }
   config.steps.forEach((step, index) => {
     const actionName = step.action === "buttonClick" ? "只点按钮" : step.action;
     addLog(`第 ${index + 1} 步：${actionName} -> ${step.targetType}:${step.target || "未填写目标"}`);
   });
+  addLog(`本单共 ${config.partTemplate.parts.length} 个领料零件。`);
   config.partTemplate.parts.forEach((part, index) => {
-    addLog(`零件 ${index + 1}：${part.code || "未填编码"}，数量 ${part.quantity || 0}，行目标 ${part.rowTarget || config.partTemplate.rowClickRule}`);
+    addLog(`零件 ${index + 1}：${part.code || "未填编码"}，数量 ${part.quantity || 0}，库位 ${part.warehouse || "未填"}`);
   });
-  addLog(`最后点击：${config.partTemplate.finalButton || "未配置"}`);
+  addLog(`所有零件选完后点击：${config.partTemplate.finalButton || "未配置"}`);
   if (config.settings.requireConfirm) {
     addLog("提交前需要二次确认。");
   }
@@ -276,14 +326,7 @@ function addStep(step) {
 }
 
 function addPart() {
-  state.partTemplate.parts.push({
-    code: "",
-    name: "",
-    quantity: 1,
-    rowTarget: "",
-    warehouse: "",
-    remark: ""
-  });
+  state.partTemplate.parts.push(normalizePart({ quantity: 1 }));
   renderParts();
   updatePreview();
 }
@@ -312,6 +355,14 @@ function bindActions() {
   });
 
   $("#addPart").addEventListener("click", addPart);
+  $("#parseBom").addEventListener("click", () => applyBom(false));
+  $("#appendBom").addEventListener("click", () => applyBom(true));
+  $("#clearParts").addEventListener("click", () => {
+    state.partTemplate.parts = [];
+    renderParts();
+    updatePreview();
+    addLog("已清空零件清单。");
+  });
 
   [
     "flowName",
@@ -326,6 +377,9 @@ function bindActions() {
     "templateName",
     "rowClickRule",
     "finalButton",
+    "partSearchTarget",
+    "quantityTarget",
+    "addPartButtonTarget",
     "browserType",
     "defaultWait",
     "failureMode",
@@ -345,7 +399,7 @@ function bindActions() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "mes-outbound-flow.json";
+    link.download = "mes-bom-issue-flow.json";
     link.click();
     URL.revokeObjectURL(url);
   });

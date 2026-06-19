@@ -2,7 +2,7 @@ import { test } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
 
-const configPath = process.env.MES_FLOW_CONFIG || path.resolve("mes-outbound-flow.json");
+const configPath = process.env.MES_FLOW_CONFIG || path.resolve("mes-bom-issue-flow.json");
 
 function readConfig() {
   if (!fs.existsSync(configPath)) {
@@ -89,7 +89,27 @@ async function choosePartRow(page, template, part) {
   }
 }
 
-test("MES 零件出库申请", async ({ page }) => {
+async function addIssuePart(page, template, part, defaultWait) {
+  if (template.partSearchTarget && part.code) {
+    const search = targetLocator(page, template.partSearchTarget);
+    await search.fill(part.code);
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(Number(defaultWait || 0));
+  }
+
+  await choosePartRow(page, template, part);
+
+  if (template.quantityTarget) {
+    await targetLocator(page, template.quantityTarget).fill(String(part.quantity || 0));
+  }
+
+  if (template.addPartButtonTarget) {
+    await targetLocator(page, template.addPartButtonTarget).click();
+    await page.waitForTimeout(Number(defaultWait || 0));
+  }
+}
+
+test("MES 生产领料申请", async ({ page }) => {
   const config = readConfig();
   if (!config.mesUrl) throw new Error("配置里没有填写 MES 地址");
 
@@ -106,7 +126,12 @@ test("MES 零件出库申请", async ({ page }) => {
   }
 
   for (const part of config.partTemplate?.parts || []) {
-    await choosePartRow(page, config.partTemplate, part);
+    try {
+      await addIssuePart(page, config.partTemplate, part, config.settings?.defaultWait);
+    } catch (error) {
+      if (config.settings?.failureMode === "skip") continue;
+      throw error;
+    }
   }
 
   const finalButton = config.partTemplate?.finalButton;
