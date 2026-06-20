@@ -89,13 +89,42 @@ async function choosePartRow(page, template, part) {
   }
 }
 
+async function findAutoNextButton(page) {
+  const candidates = [
+    "下一页",
+    "下页",
+    "后一页",
+    "Next",
+    ">",
+    "›",
+    "»"
+  ];
+  for (const label of candidates) {
+    const button = page.getByText(label, { exact: true }).first();
+    if (await button.count()) return button;
+  }
+
+  const selectors = [
+    "a[title='下一页']",
+    "button[title='下一页']",
+    "img[title='下一页']",
+    ".x-tbar-page-next",
+    ".x-btn:has-text('下一页')"
+  ];
+  for (const selector of selectors) {
+    const button = page.locator(selector).first();
+    if (await button.count()) return button;
+  }
+  return null;
+}
+
 async function findAndChooseExactPart(page, template, part, defaultWait) {
   if (part.rowTarget) {
     await choosePartRow(page, template, part);
     return;
   }
 
-  const maxPages = Math.max(Number(template.partMaxPages || 1), 1);
+  const maxPages = Math.max(Number(template.partMaxPages || 20), 1);
   const scope = template.partResultScopeTarget ? targetLocator(page, template.partResultScopeTarget) : page.locator("body");
 
   for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
@@ -105,9 +134,13 @@ async function findAndChooseExactPart(page, template, part, defaultWait) {
       return;
     }
 
-    if (!template.partNextPageTarget) break;
-    const nextButton = targetLocator(page, template.partNextPageTarget);
-    if (!(await nextButton.count())) break;
+    const nextButton = template.partNextPageTarget ? targetLocator(page, template.partNextPageTarget) : await findAutoNextButton(page);
+    if (!nextButton || !(await nextButton.count())) break;
+    const disabled = await nextButton.evaluate((el) => {
+      const className = el.className || "";
+      return el.disabled || /disabled|x-item-disabled|x-btn-disabled/.test(String(className));
+    }).catch(() => false);
+    if (disabled) break;
     await nextButton.click();
     await page.waitForTimeout(Number(defaultWait || 0));
   }

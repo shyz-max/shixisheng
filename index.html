@@ -119,6 +119,8 @@
       <input id="rowClickRule" type="hidden" value="byPartCode">
       <input id="finalButton" type="hidden" value="">
       <input id="partResultScopeTarget" type="hidden" value="">
+      <input id="partNextPageTarget" type="hidden" value="">
+      <input id="partMaxPages" type="hidden" value="20">
 
       <div class="template-grid">
         <div class="editor-block">
@@ -137,28 +139,20 @@
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="partNextPageTarget">4. 下一页按钮</label>
-          <input id="partNextPageTarget" type="text" placeholder="下一页按钮，或可留空">
-        </div>
-        <div class="editor-block">
-          <label for="partMaxPages">最多翻页次数</label>
-          <input id="partMaxPages" type="number" min="1" step="1" value="5">
-        </div>
-        <div class="editor-block">
-          <label for="partConfirmButtonTarget">5. 提交按钮</label>
+          <label for="partConfirmButtonTarget">4. 提交按钮</label>
           <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
+        </div>
+        <div class="editor-block">
+          <label for="quantityTarget">5. 主表计划数输入框</label>
+          <input id="quantityTarget" type="text" placeholder="确认添加后填写计划数，例如当前行计划数输入框">
+        </div>
+        <div class="editor-block">
+          <label for="excelFile">6. 上传 Excel 图号数量清单</label>
+          <input id="excelFile" type="file" accept=".xlsx,.xls,.csv,.tsv">
         </div>
       </div>
 
       <div class="template-grid">
-        <div class="editor-block">
-          <label for="quantityTarget">6. 主表计划数输入框</label>
-          <input id="quantityTarget" type="text" placeholder="确认添加后填写计划数，例如当前行计划数输入框">
-        </div>
-        <div class="editor-block">
-          <label for="excelFile">7. 上传 Excel 图号数量清单</label>
-          <input id="excelFile" type="file" accept=".xlsx,.xls,.csv,.tsv">
-        </div>
         <div class="editor-block">
           <label for="drawingColumnName">图号列名</label>
           <input id="drawingColumnName" type="text" value="零件图号" placeholder="例如：零件图号、图号、物料编码">
