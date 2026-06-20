@@ -286,6 +286,24 @@ textarea {
   background: #eef5ff;
 }
 
+.flow-preview {
+  clear: both;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border: 1px solid #dce2ea;
+  border-radius: 4px;
+  background: #fbfcfe;
+}
+
+.flow-preview ol {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.flow-preview li {
+  padding: 4px 0;
+}
+
 pre {
   min-height: 320px;
   max-height: 520px;

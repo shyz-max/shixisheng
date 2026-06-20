@@ -35,6 +35,7 @@ var state = {
     quantityTarget: "",
     partConfirmButtonTarget: "",
     drawingColumnName: "零件图号",
+    quantityColumnName: "数量",
     parts: [
       {
         code: "P001",
@@ -134,6 +135,7 @@ function getConfig() {
       quantityTarget: $("#quantityTarget").value.replace(/^\s+|\s+$/g, ""),
       partConfirmButtonTarget: $("#partConfirmButtonTarget").value.replace(/^\s+|\s+$/g, ""),
       drawingColumnName: $("#drawingColumnName").value.replace(/^\s+|\s+$/g, ""),
+      quantityColumnName: $("#quantityColumnName").value.replace(/^\s+|\s+$/g, ""),
       parts: state.partTemplate.parts
     },
     settings: {
@@ -167,6 +169,7 @@ function syncTopFields(config) {
   $("#quantityTarget").value = config.partTemplate && config.partTemplate.quantityTarget || "";
   $("#partConfirmButtonTarget").value = config.partTemplate && (config.partTemplate.partConfirmButtonTarget || config.partTemplate.addPartButtonTarget) || "";
   $("#drawingColumnName").value = config.partTemplate && config.partTemplate.drawingColumnName || "零件图号";
+  $("#quantityColumnName").value = config.partTemplate && config.partTemplate.quantityColumnName || "数量";
   $("#browserType").value = config.settings && config.settings.browserType || "chrome";
   $("#defaultWait").value = config.settings && config.settings.defaultWait != null ? config.settings.defaultWait : 800;
   $("#failureMode").value = config.settings && config.settings.failureMode || "pause";
@@ -274,6 +277,7 @@ function renderParts() {
       list.appendChild(item);
     })(i);
   }
+  renderPendingFlow();
 }
 
 function parseBomText(text) {
@@ -309,12 +313,26 @@ function findHeaderIndex(headers, preferredName) {
   return 0;
 }
 
+function findRequiredHeaderIndex(headers, names) {
+  for (var i = 0; i < names.length; i++) {
+    var candidate = String(names[i] || "").replace(/^\s+|\s+$/g, "").toLowerCase();
+    for (var j = 0; j < headers.length; j++) {
+      if (String(headers[j] || "").replace(/^\s+|\s+$/g, "").toLowerCase() === candidate) return j;
+    }
+  }
+  return -1;
+}
+
 function rowsToParts(rows) {
   if (!rows.length) return [];
   var headers = rows[0] || [];
-  var codeIndex = findHeaderIndex(headers, $("#drawingColumnName").value);
+  var codeIndex = findRequiredHeaderIndex(headers, [$("#drawingColumnName").value, "零件图号", "图号", "物料图号", "物料编码", "零件编码", "编码", "part no", "part number", "part code"]);
+  var qtyIndex = findRequiredHeaderIndex(headers, [$("#quantityColumnName").value, "数量", "计划数", "需求数量", "领料数量", "qty", "quantity"]);
+  if (codeIndex < 0 || qtyIndex < 0) {
+    addLog("Excel 必须包含图号列和数量列。当前识别结果：图号列 " + (codeIndex >= 0 ? "已找到" : "未找到") + "，数量列 " + (qtyIndex >= 0 ? "已找到" : "未找到") + "。");
+    return [];
+  }
   var nameIndex = findHeaderIndex(headers, "零件名称");
-  var qtyIndex = findHeaderIndex(headers, "数量");
   var warehouseIndex = findHeaderIndex(headers, "库位");
   var parts = [];
   for (var i = 1; i < rows.length; i++) {
@@ -327,12 +345,30 @@ function rowsToParts(rows) {
     var part = normalizePart({
       code: row[codeIndex] || "",
       name: nameIndex === codeIndex ? "" : row[nameIndex] || "",
-      quantity: qtyIndex === codeIndex ? 1 : row[qtyIndex] || 1,
+      quantity: row[qtyIndex] || 0,
       warehouse: warehouseIndex === codeIndex ? "" : row[warehouseIndex] || ""
     });
     if (part.code) parts.push(part);
   }
   return parts;
+}
+
+function renderPendingFlow() {
+  var list = $("#pendingFlow");
+  if (!list) return;
+  list.innerHTML = "";
+  if (!state.partTemplate.parts.length) {
+    var empty = document.createElement("li");
+    empty.appendChild(document.createTextNode("上传包含图号、数量的 Excel 后自动生成待提交流程。"));
+    list.appendChild(empty);
+    return;
+  }
+  for (var i = 0; i < state.partTemplate.parts.length; i++) {
+    var part = state.partTemplate.parts[i];
+    var li = document.createElement("li");
+    li.appendChild(document.createTextNode("物料 " + (i + 1) + "：点击添加 -> 子表输入图号 " + part.code + " -> 查询并精确选择 -> 提交添加 -> 填计划数 " + part.quantity));
+    list.appendChild(li);
+  }
 }
 
 function readExcelFile(file) {
@@ -401,6 +437,7 @@ function loadConfig(config) {
     quantityTarget: config.partTemplate && config.partTemplate.quantityTarget || "",
     partConfirmButtonTarget: config.partTemplate && (config.partTemplate.partConfirmButtonTarget || config.partTemplate.addPartButtonTarget) || "",
     drawingColumnName: config.partTemplate && config.partTemplate.drawingColumnName || "零件图号",
+    quantityColumnName: config.partTemplate && config.partTemplate.quantityColumnName || "数量",
     parts: []
   };
   var sourceParts = config.partTemplate && config.partTemplate.parts ? config.partTemplate.parts : state.partTemplate.parts;
@@ -497,7 +534,7 @@ function bindActions() {
     addLog("已清空零件清单。");
   });
 
-  var ids = ["flowName", "mesUrl", "loginEnabled", "loginUsername", "loginPassword", "usernameTarget", "passwordTarget", "loginButtonTarget", "loginWaitMs", "templateName", "rowClickRule", "finalButton", "selectPartButtonTarget", "partSearchTarget", "partSearchButtonTarget", "partResultScopeTarget", "partNextPageTarget", "partMaxPages", "quantityTarget", "partConfirmButtonTarget", "drawingColumnName", "browserType", "defaultWait", "failureMode", "requireConfirm"];
+  var ids = ["flowName", "mesUrl", "loginEnabled", "loginUsername", "loginPassword", "usernameTarget", "passwordTarget", "loginButtonTarget", "loginWaitMs", "templateName", "rowClickRule", "finalButton", "selectPartButtonTarget", "partSearchTarget", "partSearchButtonTarget", "partResultScopeTarget", "partNextPageTarget", "partMaxPages", "quantityTarget", "partConfirmButtonTarget", "drawingColumnName", "quantityColumnName", "browserType", "defaultWait", "failureMode", "requireConfirm"];
   for (var i = 0; i < ids.length; i++) {
     addEvent(document.getElementById(ids[i]), "input", updatePreview);
     addEvent(document.getElementById(ids[i]), "change", updatePreview);

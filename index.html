@@ -177,6 +177,10 @@
           <label for="drawingColumnName">图号列名</label>
           <input id="drawingColumnName" type="text" value="零件图号" placeholder="例如：零件图号、图号、物料编码">
         </div>
+        <div class="editor-block">
+          <label for="quantityColumnName">数量列名</label>
+          <input id="quantityColumnName" type="text" value="数量" placeholder="例如：数量、计划数、需求数量">
+        </div>
       </div>
 
       <div class="bom-box">
@@ -193,6 +197,15 @@
 
       <div class="hint">
         一个申请单可包含多个零件。执行时会按 Excel 图号清单循环：先点击“选择/新增零件”，在弹出的子表里搜索零件图号，确认添加，再继续第二个、第三个，最后统一提交。
+      </div>
+      <div class="flow-preview">
+        <div class="section-head compact">
+          <div>
+            <p class="eyebrow">PENDING FLOW</p>
+            <h2>待提交流程</h2>
+          </div>
+        </div>
+        <ol id="pendingFlow"></ol>
       </div>
       <div id="partsList" class="stack"></div>
     </section>
