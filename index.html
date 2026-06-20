@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MES 生产领料申请编排工具</title>
   <link rel="stylesheet" href="./styles.css">
@@ -237,7 +238,7 @@
     </section>
   </main>
 
-  <template id="stepTemplate">
+  <div id="stepTemplate" class="template-source">
     <article class="item step-item">
       <header>
         <strong class="step-number"></strong>
@@ -283,9 +284,9 @@
         </label>
       </div>
     </article>
-  </template>
+  </div>
 
-  <template id="partTemplate">
+  <div id="partTemplate" class="template-source">
     <article class="item part-item">
       <header>
         <strong class="part-title"></strong>
@@ -326,7 +327,7 @@
         </label>
       </div>
     </article>
-  </template>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="./app.js"></script>
