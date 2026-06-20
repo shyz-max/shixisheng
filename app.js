@@ -28,6 +28,10 @@ var state = {
     finalButton: "",
     selectPartButtonTarget: "",
     partSearchTarget: "",
+    partSearchButtonTarget: "",
+    partResultScopeTarget: "",
+    partNextPageTarget: "",
+    partMaxPages: 5,
     quantityTarget: "",
     partConfirmButtonTarget: "",
     drawingColumnName: "零件图号",
@@ -123,6 +127,10 @@ function getConfig() {
       finalButton: $("#finalButton").value.replace(/^\s+|\s+$/g, ""),
       selectPartButtonTarget: $("#selectPartButtonTarget").value.replace(/^\s+|\s+$/g, ""),
       partSearchTarget: $("#partSearchTarget").value.replace(/^\s+|\s+$/g, ""),
+      partSearchButtonTarget: $("#partSearchButtonTarget").value.replace(/^\s+|\s+$/g, ""),
+      partResultScopeTarget: $("#partResultScopeTarget").value.replace(/^\s+|\s+$/g, ""),
+      partNextPageTarget: $("#partNextPageTarget").value.replace(/^\s+|\s+$/g, ""),
+      partMaxPages: numberValue("partMaxPages", 5),
       quantityTarget: $("#quantityTarget").value.replace(/^\s+|\s+$/g, ""),
       partConfirmButtonTarget: $("#partConfirmButtonTarget").value.replace(/^\s+|\s+$/g, ""),
       drawingColumnName: $("#drawingColumnName").value.replace(/^\s+|\s+$/g, ""),
@@ -152,6 +160,10 @@ function syncTopFields(config) {
   $("#finalButton").value = config.partTemplate && config.partTemplate.finalButton || "";
   $("#selectPartButtonTarget").value = config.partTemplate && (config.partTemplate.selectPartButtonTarget || config.partTemplate.addPartButtonTarget) || "";
   $("#partSearchTarget").value = config.partTemplate && config.partTemplate.partSearchTarget || "";
+  $("#partSearchButtonTarget").value = config.partTemplate && config.partTemplate.partSearchButtonTarget || "";
+  $("#partResultScopeTarget").value = config.partTemplate && config.partTemplate.partResultScopeTarget || "";
+  $("#partNextPageTarget").value = config.partTemplate && config.partTemplate.partNextPageTarget || "";
+  $("#partMaxPages").value = config.partTemplate && config.partTemplate.partMaxPages || 5;
   $("#quantityTarget").value = config.partTemplate && config.partTemplate.quantityTarget || "";
   $("#partConfirmButtonTarget").value = config.partTemplate && (config.partTemplate.partConfirmButtonTarget || config.partTemplate.addPartButtonTarget) || "";
   $("#drawingColumnName").value = config.partTemplate && config.partTemplate.drawingColumnName || "零件图号";
@@ -382,6 +394,10 @@ function loadConfig(config) {
     finalButton: config.partTemplate && config.partTemplate.finalButton || "",
     selectPartButtonTarget: config.partTemplate && (config.partTemplate.selectPartButtonTarget || config.partTemplate.addPartButtonTarget) || "",
     partSearchTarget: config.partTemplate && config.partTemplate.partSearchTarget || "",
+    partSearchButtonTarget: config.partTemplate && config.partTemplate.partSearchButtonTarget || "",
+    partResultScopeTarget: config.partTemplate && config.partTemplate.partResultScopeTarget || "",
+    partNextPageTarget: config.partTemplate && config.partTemplate.partNextPageTarget || "",
+    partMaxPages: Number(config.partTemplate && config.partTemplate.partMaxPages || 5),
     quantityTarget: config.partTemplate && config.partTemplate.quantityTarget || "",
     partConfirmButtonTarget: config.partTemplate && (config.partTemplate.partConfirmButtonTarget || config.partTemplate.addPartButtonTarget) || "",
     drawingColumnName: config.partTemplate && config.partTemplate.drawingColumnName || "零件图号",
@@ -424,7 +440,7 @@ function simulateRun() {
   addLog("本单共 " + config.partTemplate.parts.length + " 个领料零件。");
   for (var p = 0; p < config.partTemplate.parts.length; p++) {
     var part = config.partTemplate.parts[p];
-    addLog("零件 " + (p + 1) + "：" + (part.code || "未填编码") + "，数量 " + (part.quantity || 0) + "，库位 " + (part.warehouse || "未填"));
+    addLog("零件 " + (p + 1) + "：" + (part.code || "未填编码") + "，点击添加 -> 子表查图号 -> 精确选中 -> 提交 -> 填计划数 " + (part.quantity || 0));
   }
   addLog("所有零件选完后点击：" + (config.partTemplate.finalButton || "未配置"));
   if (config.settings.requireConfirm) addLog("提交前需要二次确认。");
@@ -481,7 +497,7 @@ function bindActions() {
     addLog("已清空零件清单。");
   });
 
-  var ids = ["flowName", "mesUrl", "loginEnabled", "loginUsername", "loginPassword", "usernameTarget", "passwordTarget", "loginButtonTarget", "loginWaitMs", "templateName", "rowClickRule", "finalButton", "selectPartButtonTarget", "partSearchTarget", "quantityTarget", "partConfirmButtonTarget", "drawingColumnName", "browserType", "defaultWait", "failureMode", "requireConfirm"];
+  var ids = ["flowName", "mesUrl", "loginEnabled", "loginUsername", "loginPassword", "usernameTarget", "passwordTarget", "loginButtonTarget", "loginWaitMs", "templateName", "rowClickRule", "finalButton", "selectPartButtonTarget", "partSearchTarget", "partSearchButtonTarget", "partResultScopeTarget", "partNextPageTarget", "partMaxPages", "quantityTarget", "partConfirmButtonTarget", "drawingColumnName", "browserType", "defaultWait", "failureMode", "requireConfirm"];
   for (var i = 0; i < ids.length; i++) {
     addEvent(document.getElementById(ids[i]), "input", updatePreview);
     addEvent(document.getElementById(ids[i]), "change", updatePreview);

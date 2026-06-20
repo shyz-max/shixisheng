@@ -85,8 +85,34 @@ async function choosePartRow(page, template, part) {
   }
 
   if (template.rowClickRule === "byPartCode" && part.code) {
-    await page.getByText(part.code, { exact: false }).click();
+    await page.getByText(part.code, { exact: true }).click();
   }
+}
+
+async function findAndChooseExactPart(page, template, part, defaultWait) {
+  if (part.rowTarget) {
+    await choosePartRow(page, template, part);
+    return;
+  }
+
+  const maxPages = Math.max(Number(template.partMaxPages || 1), 1);
+  const scope = template.partResultScopeTarget ? targetLocator(page, template.partResultScopeTarget) : page.locator("body");
+
+  for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
+    const exactCell = scope.getByText(part.code, { exact: true }).first();
+    if (await exactCell.count()) {
+      await exactCell.click();
+      return;
+    }
+
+    if (!template.partNextPageTarget) break;
+    const nextButton = targetLocator(page, template.partNextPageTarget);
+    if (!(await nextButton.count())) break;
+    await nextButton.click();
+    await page.waitForTimeout(Number(defaultWait || 0));
+  }
+
+  throw new Error(`没有在选择物料结果中找到完全匹配图号：${part.code}`);
 }
 
 async function addIssuePart(page, template, part, defaultWait) {
@@ -98,20 +124,24 @@ async function addIssuePart(page, template, part, defaultWait) {
   if (template.partSearchTarget && part.code) {
     const search = targetLocator(page, template.partSearchTarget);
     await search.fill(part.code);
-    await page.keyboard.press("Enter");
+    if (template.partSearchButtonTarget) {
+      await targetLocator(page, template.partSearchButtonTarget).click();
+    } else {
+      await page.keyboard.press("Enter");
+    }
     await page.waitForTimeout(Number(defaultWait || 0));
   }
 
-  await choosePartRow(page, template, part);
-
-  if (template.quantityTarget) {
-    await targetLocator(page, template.quantityTarget).fill(String(part.quantity || 0));
-  }
+  await findAndChooseExactPart(page, template, part, defaultWait);
 
   const confirmTarget = template.partConfirmButtonTarget || template.addPartButtonTarget;
   if (confirmTarget) {
     await targetLocator(page, confirmTarget).click();
     await page.waitForTimeout(Number(defaultWait || 0));
+  }
+
+  if (template.quantityTarget) {
+    await targetLocator(page, template.quantityTarget).fill(String(part.quantity || 0));
   }
 }
 

@@ -140,15 +140,34 @@
           <input id="partSearchTarget" type="text" placeholder="#drawingNo 或 input[name='partCode']">
         </div>
         <div class="editor-block">
-          <label for="partConfirmButtonTarget">子表确认添加按钮</label>
-          <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
+          <label for="partSearchButtonTarget">子表查询按钮</label>
+          <input id="partSearchButtonTarget" type="text" placeholder="查询、#search">
         </div>
       </div>
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="quantityTarget">数量输入框</label>
-          <input id="quantityTarget" type="text" placeholder="#qty 或 input[name='quantity']">
+          <label for="partResultScopeTarget">搜索结果范围</label>
+          <input id="partResultScopeTarget" type="text" placeholder="可空，或 .x-grid3-body / table">
+        </div>
+        <div class="editor-block">
+          <label for="partNextPageTarget">子表下一页按钮</label>
+          <input id="partNextPageTarget" type="text" placeholder="下一页按钮，或可留空">
+        </div>
+        <div class="editor-block">
+          <label for="partMaxPages">最多翻页次数</label>
+          <input id="partMaxPages" type="number" min="1" step="1" value="5">
+        </div>
+      </div>
+
+      <div class="template-grid">
+        <div class="editor-block">
+          <label for="partConfirmButtonTarget">子表确认添加按钮</label>
+          <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
+        </div>
+        <div class="editor-block">
+          <label for="quantityTarget">主表计划数输入框</label>
+          <input id="quantityTarget" type="text" placeholder="确认添加后填写计划数，例如当前行计划数输入框">
         </div>
         <div class="editor-block">
           <label for="excelFile">上传 Excel 领料清单</label>
