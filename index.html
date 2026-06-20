@@ -95,9 +95,13 @@
           <h2 id="workflowTitle">申请单前置步骤</h2>
         </div>
         <div class="actions">
+          <button id="addPrePickPreset" type="button">添加选料前模板</button>
           <button id="addButtonStep" type="button">添加按钮点击</button>
           <button id="addStep" type="button">添加步骤</button>
         </div>
+      </div>
+      <div class="hint">
+        这里配置只执行一次的选料前动作，例如进入零星计划配套页面、填写单头字段、点击某些确认按钮。执行顺序是：先跑这些前置步骤，再按 Excel 清单逐个选物料。
       </div>
       <div id="stepsList" class="stack"></div>
     </section>
@@ -290,6 +294,7 @@
             <option value="select">下拉选择</option>
             <option value="wait">等待</option>
             <option value="hotkey">快捷键</option>
+            <option value="note">备注/人工确认</option>
           </select>
         </label>
         <label>

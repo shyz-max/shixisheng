@@ -238,6 +238,7 @@ function renderSteps() {
       addEvent($(".remove-step", item), "click", function () {
         state.steps.splice(index, 1);
         renderSteps();
+        renderPendingFlow();
         updatePreview();
       });
       list.appendChild(item);
@@ -357,9 +358,18 @@ function renderPendingFlow() {
   var list = $("#pendingFlow");
   if (!list) return;
   list.innerHTML = "";
+  var pre = document.createElement("li");
+  pre.appendChild(document.createTextNode("先执行选料前步骤 " + state.steps.length + " 项：进入页面/填写单头/点击确认等。"));
+  list.appendChild(pre);
+  for (var s = 0; s < state.steps.length; s++) {
+    var step = state.steps[s];
+    var preStep = document.createElement("li");
+    preStep.appendChild(document.createTextNode("前置 " + (s + 1) + "：" + (step.name || step.action) + " -> " + (step.target || "未填写目标")));
+    list.appendChild(preStep);
+  }
   if (!state.partTemplate.parts.length) {
     var empty = document.createElement("li");
-    empty.appendChild(document.createTextNode("上传包含图号、数量的 Excel 后自动生成待提交流程。"));
+    empty.appendChild(document.createTextNode("然后上传包含图号、数量的 Excel，自动生成逐个选料流程。"));
     list.appendChild(empty);
     return;
   }
@@ -494,6 +504,7 @@ function simulateRun() {
 function addStep(step) {
   state.steps.push(normalizeClickStep(step));
   renderSteps();
+  renderPendingFlow();
   updatePreview();
 }
 
@@ -501,6 +512,33 @@ function addPart() {
   state.partTemplate.parts.push(normalizePart({ quantity: 1 }));
   renderParts();
   updatePreview();
+}
+
+function addPrePickPreset() {
+  addStep({
+    name: "进入零星计划配套页面",
+    action: "buttonClick",
+    targetType: "text",
+    target: "零星计划配套",
+    value: "",
+    waitMs: numberValue("defaultWait", 800)
+  });
+  addStep({
+    name: "填写或确认单头信息",
+    action: "note",
+    targetType: "note",
+    target: "按实际页面补充：领用类型、责任部门、批次等字段",
+    value: "",
+    waitMs: numberValue("defaultWait", 800)
+  });
+  addStep({
+    name: "选料前确认按钮",
+    action: "buttonClick",
+    targetType: "text",
+    target: "",
+    value: "",
+    waitMs: numberValue("defaultWait", 800)
+  });
 }
 
 function bindActions() {
@@ -524,6 +562,7 @@ function bindActions() {
       waitMs: numberValue("defaultWait", 800)
     });
   });
+  addEvent($("#addPrePickPreset"), "click", addPrePickPreset);
   addEvent($("#addPart"), "click", addPart);
   addEvent($("#parseBom"), "click", function () { applyBom(false); });
   addEvent($("#appendBom"), "click", function () { applyBom(true); });
