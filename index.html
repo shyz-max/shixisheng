@@ -115,66 +115,48 @@
         <button id="addPart" type="button">新增零件</button>
       </div>
 
-      <div class="template-grid">
-        <div class="editor-block">
-          <label for="templateName">模板名称</label>
-          <input id="templateName" type="text" value="BOM 生产领料">
-        </div>
-        <div class="editor-block">
-          <label for="rowClickRule">选中行规则</label>
-          <select id="rowClickRule">
-            <option value="byPartCode">按零件编码所在行</option>
-            <option value="fixedRow">固定行号</option>
-            <option value="customSelector">自定义选择器</option>
-          </select>
-        </div>
-        <div class="editor-block">
-          <label for="finalButton">所有零件选完后点击</label>
-          <input id="finalButton" type="text" placeholder="例如：提交、#submit、//button[.='提交']">
-        </div>
-      </div>
+      <input id="templateName" type="hidden" value="BOM 生产领料">
+      <input id="rowClickRule" type="hidden" value="byPartCode">
+      <input id="finalButton" type="hidden" value="">
+      <input id="partResultScopeTarget" type="hidden" value="">
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="selectPartButtonTarget">每个零件先点击</label>
+          <label for="selectPartButtonTarget">1. 添加按钮</label>
           <input id="selectPartButtonTarget" type="text" placeholder="选择零件、新增、#selectPart">
         </div>
         <div class="editor-block">
-          <label for="partSearchTarget">子表图号搜索框</label>
+          <label for="partSearchTarget">2. 选择物料-图号输入框</label>
           <input id="partSearchTarget" type="text" placeholder="#drawingNo 或 input[name='partCode']">
         </div>
         <div class="editor-block">
-          <label for="partSearchButtonTarget">子表查询按钮</label>
+          <label for="partSearchButtonTarget">3. 查询按钮</label>
           <input id="partSearchButtonTarget" type="text" placeholder="查询、#search">
         </div>
       </div>
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="partResultScopeTarget">搜索结果范围</label>
-          <input id="partResultScopeTarget" type="text" placeholder="可空，或 .x-grid3-body / table">
-        </div>
-        <div class="editor-block">
-          <label for="partNextPageTarget">子表下一页按钮</label>
+          <label for="partNextPageTarget">4. 下一页按钮</label>
           <input id="partNextPageTarget" type="text" placeholder="下一页按钮，或可留空">
         </div>
         <div class="editor-block">
           <label for="partMaxPages">最多翻页次数</label>
           <input id="partMaxPages" type="number" min="1" step="1" value="5">
         </div>
+        <div class="editor-block">
+          <label for="partConfirmButtonTarget">5. 提交按钮</label>
+          <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
+        </div>
       </div>
 
       <div class="template-grid">
         <div class="editor-block">
-          <label for="partConfirmButtonTarget">子表确认添加按钮</label>
-          <input id="partConfirmButtonTarget" type="text" placeholder="确认、添加、#confirmPart">
-        </div>
-        <div class="editor-block">
-          <label for="quantityTarget">主表计划数输入框</label>
+          <label for="quantityTarget">6. 主表计划数输入框</label>
           <input id="quantityTarget" type="text" placeholder="确认添加后填写计划数，例如当前行计划数输入框">
         </div>
         <div class="editor-block">
-          <label for="excelFile">上传 Excel 领料清单</label>
+          <label for="excelFile">7. 上传 Excel 图号数量清单</label>
           <input id="excelFile" type="file" accept=".xlsx,.xls,.csv,.tsv">
         </div>
         <div class="editor-block">
@@ -200,7 +182,7 @@
       </div>
 
       <div class="hint">
-        一个申请单可包含多个零件。执行时会按 Excel 图号清单循环：先点击“选择/新增零件”，在弹出的子表里搜索零件图号，确认添加，再继续第二个、第三个，最后统一提交。
+        按截图里的固定流程执行：添加 -> 填图号 -> 查询 -> 精确选择同图号结果，找不到就翻页 -> 提交 -> 填计划数，然后处理下一个图号。
       </div>
       <div class="flow-preview">
         <div class="section-head compact">
