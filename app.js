@@ -516,26 +516,26 @@ function addPart() {
 
 function addPrePickPreset() {
   addStep({
-    name: "进入零星计划配套页面",
+    name: "打开出入库管理",
     action: "buttonClick",
     targetType: "text",
-    target: "零星计划配套",
+    target: "出入库管理",
     value: "",
     waitMs: numberValue("defaultWait", 800)
   });
   addStep({
-    name: "填写或确认单头信息",
-    action: "note",
-    targetType: "note",
-    target: "按实际页面补充：领用类型、责任部门、批次等字段",
+    name: "打开出库申请",
+    action: "buttonClick",
+    targetType: "text",
+    target: "出库申请",
     value: "",
     waitMs: numberValue("defaultWait", 800)
   });
   addStep({
-    name: "选料前确认按钮",
+    name: "打开零星计划配套单维护",
     action: "buttonClick",
     targetType: "text",
-    target: "",
+    target: "零星计划配套单维护",
     value: "",
     waitMs: numberValue("defaultWait", 800)
   });
